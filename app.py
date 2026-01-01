@@ -10,7 +10,7 @@ import os
 import random
 from datetime import datetime
 
-from tarot_data import TAROT_CARDS, get_tarot_interpretation
+from tarot_data import TAROT_CARDS, get_tarot_interpretation, LESSONS, QUIZZES
 from flex_templates import (
     create_main_menu,
     create_reading_menu,
@@ -20,7 +20,14 @@ from flex_templates import (
     create_search_results,
     create_celtic_cross_result,
     create_learning_menu,
-    create_beginner_guide
+    create_beginner_guide,
+    create_lessons_list,
+    create_lesson_detail,
+    create_quiz,
+    create_quiz_result,
+    create_progress_view,
+    create_card_library,
+    create_daily_practice
 )
 
 # --------------------------------------------------
@@ -49,7 +56,7 @@ user_progress = {}
 # --------------------------------------------------
 @app.route("/", methods=["GET"])
 def home():
-    return "Tarot Bot is running!", 200
+    return "🌙 Tarot Learning Bot is running!", 200
 
 @app.route("/callback", methods=["POST"])
 def callback():
@@ -77,7 +84,7 @@ def handle_message(event):
     with ApiClient(configuration) as api_client:
         line_bot_api = MessagingApi(api_client)
 
-        if text in ["بداية", "القائمة", "menu", "start", "Start", "القائمه"]:
+        if text in ["بداية", "القائمة", "menu", "start", "Start", "القائمه", "البداية"]:
             initialize_user(user_id)
             flex = FlexMessage(
                 alt_text="🌙 القائمة الرئيسية",
@@ -120,8 +127,10 @@ def handle_message(event):
                 ReplyMessageRequest(
                     reply_token=event.reply_token,
                     messages=[TextMessage(
-                        text="🌙 مرحباً بك في بوت التاروت!\n\n"
+                        text="🌙 مرحباً بك في بوت تعلم التاروت!\n\n"
                              "🎴 اكتب 'بداية' أو 'menu' لفتح القائمة\n"
+                             "📚 تعلم التاروت خطوة بخطوة\n"
+                             "🎯 اختبر معرفتك مع التمارين\n"
                              "🔍 اكتب 'بحث: اسم البطاقة' للبحث\n\n"
                              "مثال: بحث: المهرج"
                     )]
@@ -140,6 +149,7 @@ def handle_postback(event):
         line_bot_api = MessagingApi(api_client)
 
         try:
+            # القائمة الرئيسية
             if data == "action=main_menu":
                 flex = FlexMessage(
                     alt_text="🌙 القائمة الرئيسية",
@@ -152,6 +162,7 @@ def handle_postback(event):
                     )
                 )
 
+            # قائمة القراءات
             elif data == "action=reading_menu":
                 flex = FlexMessage(
                     alt_text="🎴 اختر نوع القراءة",
@@ -164,6 +175,7 @@ def handle_postback(event):
                     )
                 )
 
+            # تنفيذ القراءة
             elif data.startswith("action=reading&type="):
                 reading_type = data.split("=")[-1]
                 result = perform_reading(user_id, reading_type)
@@ -190,6 +202,7 @@ def handle_postback(event):
                     )
                 )
 
+            # بطاقة اليوم
             elif data == "action=daily_card":
                 card = get_daily_card(user_id)
                 flex = FlexMessage(
@@ -205,6 +218,7 @@ def handle_postback(event):
                     )
                 )
 
+            # الإحصائيات
             elif data == "action=stats":
                 stats = get_user_stats(user_id)
                 flex = FlexMessage(
@@ -220,6 +234,7 @@ def handle_postback(event):
                     )
                 )
 
+            # مركز التعلم
             elif data == "action=learning_menu":
                 flex = FlexMessage(
                     alt_text="📚 مركز التعلم",
@@ -232,6 +247,7 @@ def handle_postback(event):
                     )
                 )
 
+            # دليل المبتدئين
             elif data == "action=beginner_guide":
                 flex = FlexMessage(
                     alt_text="🌱 دليل المبتدئين",
@@ -244,6 +260,64 @@ def handle_postback(event):
                     )
                 )
 
+            # قائمة الدروس
+            elif data == "action=lessons_list":
+                flex = FlexMessage(
+                    alt_text="📖 الدروس التعليمية",
+                    contents=FlexContainer.from_dict(
+                        create_lessons_list(user_progress.get(user_id, {}))
+                    )
+                )
+                line_bot_api.reply_message(
+                    ReplyMessageRequest(
+                        reply_token=event.reply_token,
+                        messages=[flex]
+                    )
+                )
+
+            # تفاصيل درس
+            elif data.startswith("action=lesson&id="):
+                lesson_id = int(data.split("=")[-1])
+                lesson = next((l for l in LESSONS if l["id"] == lesson_id), None)
+                
+                if lesson:
+                    flex = FlexMessage(
+                        alt_text=f"📖 {lesson['title']}",
+                        contents=FlexContainer.from_dict(
+                            create_lesson_detail(lesson, user_progress.get(user_id, {}))
+                        )
+                    )
+                    
+                    # تسجيل إتمام الدرس
+                    if user_id not in user_progress:
+                        user_progress[user_id] = {"lessons_completed": [], "quizzes_passed": [], "cards_mastered": []}
+                    
+                    if lesson_id not in user_progress[user_id].get("lessons_completed", []):
+                        user_progress[user_id].setdefault("lessons_completed", []).append(lesson_id)
+                    
+                    line_bot_api.reply_message(
+                        ReplyMessageRequest(
+                            reply_token=event.reply_token,
+                            messages=[flex]
+                        )
+                    )
+
+            # مكتبة البطاقات
+            elif data == "action=card_library":
+                flex = FlexMessage(
+                    alt_text="🎴 مكتبة البطاقات",
+                    contents=FlexContainer.from_dict(
+                        create_card_library(user_progress.get(user_id, {}))
+                    )
+                )
+                line_bot_api.reply_message(
+                    ReplyMessageRequest(
+                        reply_token=event.reply_token,
+                        messages=[flex]
+                    )
+                )
+
+            # تفاصيل بطاقة
             elif data.startswith("action=card_detail&id="):
                 card_id = int(data.split("=")[-1])
                 card = next((c for c in TAROT_CARDS if c["id"] == card_id), None)
@@ -257,12 +331,136 @@ def handle_postback(event):
                             create_card_display(card_copy, is_learning=True)
                         )
                     )
+                    
+                    # تسجيل البطاقة كمشاهدة
+                    if user_id not in user_progress:
+                        user_progress[user_id] = {"cards_viewed": []}
+                    
+                    if card_id not in user_progress[user_id].get("cards_viewed", []):
+                        user_progress[user_id].setdefault("cards_viewed", []).append(card_id)
+                    
                     line_bot_api.reply_message(
                         ReplyMessageRequest(
                             reply_token=event.reply_token,
                             messages=[flex]
                         )
                     )
+
+            # عرض اختبار
+            elif data.startswith("action=quiz&id="):
+                quiz_id = int(data.split("=")[-1])
+                quiz = next((q for q in QUIZZES if q["id"] == quiz_id), None)
+                
+                if quiz:
+                    # تهيئة جلسة الاختبار
+                    if user_id not in user_sessions:
+                        user_sessions[user_id] = {}
+                    
+                    user_sessions[user_id]["current_quiz"] = quiz_id
+                    user_sessions[user_id]["quiz_answers"] = []
+                    user_sessions[user_id]["current_question"] = 0
+                    
+                    flex = FlexMessage(
+                        alt_text=f"🎯 {quiz['title']}",
+                        contents=FlexContainer.from_dict(
+                            create_quiz(quiz, 0)
+                        )
+                    )
+                    line_bot_api.reply_message(
+                        ReplyMessageRequest(
+                            reply_token=event.reply_token,
+                            messages=[flex]
+                        )
+                    )
+
+            # الإجابة على سؤال
+            elif data.startswith("action=answer&quiz="):
+                parts = data.split("&")
+                quiz_id = int(parts[1].split("=")[1])
+                question_idx = int(parts[2].split("=")[1])
+                answer = int(parts[3].split("=")[1])
+                
+                quiz = next((q for q in QUIZZES if q["id"] == quiz_id), None)
+                
+                if quiz and user_id in user_sessions:
+                    session = user_sessions[user_id]
+                    
+                    # حفظ الإجابة
+                    is_correct = (answer == quiz["questions"][question_idx]["correct"])
+                    session["quiz_answers"].append(is_correct)
+                    
+                    next_question = question_idx + 1
+                    
+                    # إذا كان هناك أسئلة متبقية
+                    if next_question < len(quiz["questions"]):
+                        flex = FlexMessage(
+                            alt_text=f"🎯 السؤال {next_question + 1}",
+                            contents=FlexContainer.from_dict(
+                                create_quiz(quiz, next_question)
+                            )
+                        )
+                        line_bot_api.reply_message(
+                            ReplyMessageRequest(
+                                reply_token=event.reply_token,
+                                messages=[flex]
+                            )
+                        )
+                    else:
+                        # عرض النتيجة
+                        score = sum(session["quiz_answers"])
+                        total = len(quiz["questions"])
+                        passed = score >= (total * 0.7)
+                        
+                        if passed:
+                            if user_id not in user_progress:
+                                user_progress[user_id] = {"quizzes_passed": []}
+                            
+                            if quiz_id not in user_progress[user_id].get("quizzes_passed", []):
+                                user_progress[user_id].setdefault("quizzes_passed", []).append(quiz_id)
+                        
+                        flex = FlexMessage(
+                            alt_text="✨ نتيجة الاختبار",
+                            contents=FlexContainer.from_dict(
+                                create_quiz_result(quiz, score, total, passed)
+                            )
+                        )
+                        line_bot_api.reply_message(
+                            ReplyMessageRequest(
+                                reply_token=event.reply_token,
+                                messages=[flex]
+                            )
+                        )
+
+            # التقدم الشخصي
+            elif data == "action=progress":
+                flex = FlexMessage(
+                    alt_text="🌟 تقدمك التعليمي",
+                    contents=FlexContainer.from_dict(
+                        create_progress_view(user_progress.get(user_id, {}))
+                    )
+                )
+                line_bot_api.reply_message(
+                    ReplyMessageRequest(
+                        reply_token=event.reply_token,
+                        messages=[flex]
+                    )
+                )
+
+            # التمرين اليومي
+            elif data == "action=daily_practice":
+                practice = generate_daily_practice(user_id)
+                flex = FlexMessage(
+                    alt_text="💪 التمرين اليومي",
+                    contents=FlexContainer.from_dict(
+                        create_daily_practice(practice)
+                    )
+                )
+                line_bot_api.reply_message(
+                    ReplyMessageRequest(
+                        reply_token=event.reply_token,
+                        messages=[flex]
+                    )
+                )
 
         except Exception as e:
             app.logger.error(f"Error handling postback: {e}")
@@ -281,9 +479,14 @@ def initialize_user(user_id):
     if user_id not in user_progress:
         user_progress[user_id] = {
             "readings_count": 0,
-            "cards_viewed": 0,
+            "cards_viewed": [],
             "daily_cards_count": 0,
-            "joined_date": datetime.now().isoformat()
+            "joined_date": datetime.now().isoformat(),
+            "lessons_completed": [],
+            "quizzes_passed": [],
+            "cards_mastered": [],
+            "level": 1,
+            "xp": 0
         }
 
 def perform_reading(user_id, reading_type):
@@ -325,7 +528,9 @@ def perform_reading(user_id, reading_type):
     reading_history[user_id] = reading_history[user_id][:20]
 
     # تحديث الإحصائيات
-    user_progress[user_id]["readings_count"] += 1
+    if user_id in user_progress:
+        user_progress[user_id]["readings_count"] += 1
+        user_progress[user_id]["xp"] += 10
     
     return result
 
@@ -343,7 +548,9 @@ def get_daily_card(user_id):
             "date": today,
             "card": card
         }
-        user_progress[user_id]["daily_cards_count"] += 1
+        if user_id in user_progress:
+            user_progress[user_id]["daily_cards_count"] += 1
+            user_progress[user_id]["xp"] += 5
 
     return user_sessions[user_id]["card"]
 
@@ -352,23 +559,22 @@ def get_user_stats(user_id):
     initialize_user(user_id)
     stats = user_progress[user_id].copy()
     
-    total = (
-        stats["readings_count"]
-        + stats["cards_viewed"]
-        + stats["daily_cards_count"]
-    )
-
-    if total < 10:
-        level = "مبتدئ 🌱"
-    elif total < 50:
-        level = "متعلم 📚"
-    elif total < 100:
-        level = "متمرس ✨"
+    xp = stats.get("xp", 0)
+    level = 1 + (xp // 100)
+    
+    if level < 5:
+        title = "مبتدئ 🌱"
+    elif level < 10:
+        title = "متعلم 📚"
+    elif level < 20:
+        title = "متمرس ✨"
     else:
-        level = "خبير 🌟"
+        title = "خبير 🌟"
 
     stats["level"] = level
-    stats["total"] = total
+    stats["title"] = title
+    stats["next_level_xp"] = (level * 100)
+    
     return stats
 
 def search_cards(term):
@@ -385,6 +591,42 @@ def search_cards(term):
             results.append(card)
 
     return results[:10]
+
+def generate_daily_practice(user_id):
+    """توليد تمرين يومي"""
+    initialize_user(user_id)
+    progress = user_progress[user_id]
+    
+    # اختيار بطاقة عشوائية
+    card = random.choice(TAROT_CARDS)
+    
+    # إنشاء سؤال
+    question_types = [
+        {
+            "type": "meaning",
+            "question": f"ما معنى بطاقة {card['name_ar']} عند ظهورها مستقيمة؟",
+            "answer": card["meaning_upright"]
+        },
+        {
+            "type": "keywords",
+            "question": f"اذكر كلمتين مفتاحيتين لبطاقة {card['name_ar']}",
+            "answer": ", ".join(card["keywords"][:2])
+        },
+        {
+            "type": "reversed",
+            "question": f"ما معنى بطاقة {card['name_ar']} عند ظهورها معكوسة؟",
+            "answer": card["meaning_reversed"]
+        }
+    ]
+    
+    selected_question = random.choice(question_types)
+    
+    return {
+        "card": card,
+        "question": selected_question["question"],
+        "answer": selected_question["answer"],
+        "xp_reward": 15
+    }
 
 # --------------------------------------------------
 # Run App
