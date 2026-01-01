@@ -1,7 +1,20 @@
 from datetime import datetime
 
+# --------------------------------------------------
+# ألوان موحدة
+# --------------------------------------------------
+COLORS = {
+    "primary": "#6A0DAD",
+    "secondary": "#9370DB",
+    "bg": "#F8F8F8",
+    "text": "#333333",
+    "muted": "#777777"
+}
+
+# --------------------------------------------------
+# القائمة الرئيسية
+# --------------------------------------------------
 def create_main_menu():
-    """القائمة الرئيسية"""
     return {
         "type": "bubble",
         "hero": {
@@ -10,665 +23,257 @@ def create_main_menu():
             "contents": [
                 {
                     "type": "text",
-                    "text": "بوت التاروت",
+                    "text": "🌙 بوت التاروت الشامل",
+                    "size": "xl",
                     "weight": "bold",
-                    "size": "xxl",
                     "align": "center",
-                    "color": "#8B4789"
+                    "color": "#FFFFFF"
                 },
                 {
                     "type": "text",
-                    "text": "اكتشف ما تخبئه لك البطاقات",
+                    "text": "اختر ما يناسبك",
                     "size": "sm",
                     "align": "center",
-                    "color": "#999999",
-                    "margin": "md"
+                    "color": "#E6E6FA",
+                    "margin": "sm"
                 }
             ],
             "paddingAll": "20px",
-            "backgroundColor": "#F5F5DC"
+            "backgroundColor": COLORS["primary"]
         },
         "body": {
             "type": "box",
             "layout": "vertical",
-            "contents": [
-                {
-                    "type": "button",
-                    "style": "primary",
-                    "color": "#8B4789",
-                    "action": {
-                        "type": "postback",
-                        "label": "قراءة التاروت",
-                        "data": "action=reading_menu"
-                    }
-                },
-                {
-                    "type": "button",
-                    "style": "primary",
-                    "color": "#9370DB",
-                    "action": {
-                        "type": "postback",
-                        "label": "البطاقة اليومية",
-                        "data": "action=daily_card"
-                    },
-                    "margin": "md"
-                },
-                {
-                    "type": "button",
-                    "style": "secondary",
-                    "action": {
-                        "type": "postback",
-                        "label": "سجل القراءات",
-                        "data": "action=history"
-                    },
-                    "margin": "md"
-                },
-                {
-                    "type": "button",
-                    "style": "link",
-                    "action": {
-                        "type": "postback",
-                        "label": "عن البوت",
-                        "data": "action=about"
-                    },
-                    "margin": "md"
-                }
-            ],
             "spacing": "md",
-            "paddingAll": "20px"
+            "contents": [
+                button("🎴 قراءات التاروت", "action=reading_menu"),
+                button("🔮 بطاقة اليوم", "action=daily_card"),
+                button("📚 التعلم", "action=learning_menu"),
+                button("📊 إحصائياتي", "action=stats")
+            ]
         }
     }
 
+# --------------------------------------------------
+# قائمة القراءات
+# --------------------------------------------------
 def create_reading_menu():
-    """قائمة أنواع القراءات"""
     return {
         "type": "bubble",
-        "header": {
+        "header": header("🎴 اختر نوع القراءة"),
+        "body": {
             "type": "box",
             "layout": "vertical",
+            "spacing": "md",
             "contents": [
-                {
-                    "type": "text",
-                    "text": "اختر نوع القراءة",
-                    "weight": "bold",
-                    "size": "xl",
-                    "align": "center",
-                    "color": "#FFFFFF"
-                }
-            ],
-            "paddingAll": "20px",
-            "backgroundColor": "#8B4789"
-        },
+                button("بطاقة واحدة", "action=reading&type=single"),
+                button("الماضي / الحاضر / المستقبل", "action=reading&type=past_present_future"),
+                button("العلاقات", "action=reading&type=relationship"),
+                button("اتخاذ قرار", "action=reading&type=decision"),
+                button("الصليب السلتي (10)", "action=reading&type=celtic_cross")
+            ]
+        }
+    }
+
+# --------------------------------------------------
+# عرض بطاقة واحدة
+# --------------------------------------------------
+def create_card_display(card, is_daily=False, is_learning=False):
+    direction = "معكوسة" if card.get("reversed") else "مستقيمة"
+    meaning = card["meaning_reversed"] if card.get("reversed") else card["meaning_upright"]
+
+    return {
+        "type": "bubble",
+        "header": header(card["name_ar"]),
         "body": {
             "type": "box",
             "layout": "vertical",
             "contents": [
-                {
-                    "type": "box",
-                    "layout": "vertical",
-                    "contents": [
-                        {
-                            "type": "text",
-                            "text": "قراءة بطاقة واحدة",
-                            "weight": "bold",
-                            "size": "md",
-                            "color": "#8B4789"
-                        },
-                        {
-                            "type": "text",
-                            "text": "للأسئلة السريعة والمباشرة",
-                            "size": "xs",
-                            "color": "#999999",
-                            "margin": "xs"
-                        },
-                        {
-                            "type": "button",
-                            "style": "primary",
-                            "color": "#8B4789",
-                            "action": {
-                                "type": "postback",
-                                "label": "ابدأ القراءة",
-                                "data": "action=reading&type=single"
-                            },
-                            "margin": "sm"
-                        }
-                    ],
-                    "backgroundColor": "#F0E6F6",
-                    "paddingAll": "15px",
-                    "cornerRadius": "md"
-                },
-                {
-                    "type": "box",
-                    "layout": "vertical",
-                    "contents": [
-                        {
-                            "type": "text",
-                            "text": "الماضي والحاضر والمستقبل",
-                            "weight": "bold",
-                            "size": "md",
-                            "color": "#9370DB"
-                        },
-                        {
-                            "type": "text",
-                            "text": "قراءة شاملة لرحلتك",
-                            "size": "xs",
-                            "color": "#999999",
-                            "margin": "xs"
-                        },
-                        {
-                            "type": "button",
-                            "style": "primary",
-                            "color": "#9370DB",
-                            "action": {
-                                "type": "postback",
-                                "label": "ابدأ القراءة",
-                                "data": "action=reading&type=past_present_future"
-                            },
-                            "margin": "sm"
-                        }
-                    ],
-                    "backgroundColor": "#E6E6FA",
-                    "paddingAll": "15px",
-                    "cornerRadius": "md",
-                    "margin": "md"
-                },
-                {
-                    "type": "box",
-                    "layout": "vertical",
-                    "contents": [
-                        {
-                            "type": "text",
-                            "text": "قراءة العلاقات",
-                            "weight": "bold",
-                            "size": "md",
-                            "color": "#BA55D3"
-                        },
-                        {
-                            "type": "text",
-                            "text": "لفهم علاقاتك العاطفية",
-                            "size": "xs",
-                            "color": "#999999",
-                            "margin": "xs"
-                        },
-                        {
-                            "type": "button",
-                            "style": "primary",
-                            "color": "#BA55D3",
-                            "action": {
-                                "type": "postback",
-                                "label": "ابدأ القراءة",
-                                "data": "action=reading&type=relationship"
-                            },
-                            "margin": "sm"
-                        }
-                    ],
-                    "backgroundColor": "#F8E6FF",
-                    "paddingAll": "15px",
-                    "cornerRadius": "md",
-                    "margin": "md"
-                },
-                {
-                    "type": "box",
-                    "layout": "vertical",
-                    "contents": [
-                        {
-                            "type": "text",
-                            "text": "قراءة القرار",
-                            "weight": "bold",
-                            "size": "md",
-                            "color": "#9932CC"
-                        },
-                        {
-                            "type": "text",
-                            "text": "للمساعدة في اتخاذ القرارات",
-                            "size": "xs",
-                            "color": "#999999",
-                            "margin": "xs"
-                        },
-                        {
-                            "type": "button",
-                            "style": "primary",
-                            "color": "#9932CC",
-                            "action": {
-                                "type": "postback",
-                                "label": "ابدأ القراءة",
-                                "data": "action=reading&type=decision"
-                            },
-                            "margin": "sm"
-                        }
-                    ],
-                    "backgroundColor": "#EDE6F5",
-                    "paddingAll": "15px",
-                    "cornerRadius": "md",
-                    "margin": "md"
-                }
-            ],
-            "paddingAll": "20px"
-        },
-        "footer": {
-            "type": "box",
-            "layout": "vertical",
-            "contents": [
-                {
-                    "type": "button",
-                    "style": "link",
-                    "action": {
-                        "type": "postback",
-                        "label": "العودة للقائمة الرئيسية",
-                        "data": "action=main_menu"
-                    }
-                }
-            ],
-            "paddingAll": "15px"
+                text(f"{card['name']} • {direction}", "sm", COLORS["muted"]),
+                spacer(),
+                text(meaning, "sm"),
+                spacer(),
+                text(" • ".join(card.get("keywords", [])), "xs", COLORS["secondary"])
+            ]
         }
     }
 
-def create_card_display(card, is_daily=False):
-    """عرض بطاقة واحدة"""
-    direction = "معكوسة" if card['reversed'] else "مستقيمة"
-    meaning = card['meaning_reversed'] if card['reversed'] else card['meaning_upright']
-    
-    return {
-        "type": "bubble",
-        "hero": {
-            "type": "box",
-            "layout": "vertical",
-            "contents": [
-                {
-                    "type": "text",
-                    "text": "بطاقة اليوم" if is_daily else "بطاقتك",
-                    "weight": "bold",
-                    "size": "sm",
-                    "align": "center",
-                    "color": "#FFFFFF"
-                },
-                {
-                    "type": "text",
-                    "text": card['name_ar'],
-                    "weight": "bold",
-                    "size": "xxl",
-                    "align": "center",
-                    "color": "#FFFFFF",
-                    "margin": "md"
-                },
-                {
-                    "type": "text",
-                    "text": card['name'],
-                    "size": "sm",
-                    "align": "center",
-                    "color": "#FFFFFF",
-                    "margin": "xs"
-                },
-                {
-                    "type": "text",
-                    "text": f"({direction})",
-                    "size": "xs",
-                    "align": "center",
-                    "color": "#FFD700",
-                    "margin": "sm"
-                }
-            ],
-            "paddingAll": "25px",
-            "backgroundColor": card.get('color', '#8B4789')
-        },
-        "body": {
-            "type": "box",
-            "layout": "vertical",
-            "contents": [
-                {
-                    "type": "text",
-                    "text": "المعنى",
-                    "weight": "bold",
-                    "size": "lg",
-                    "color": "#8B4789"
-                },
-                {
-                    "type": "text",
-                    "text": meaning,
-                    "size": "sm",
-                    "wrap": True,
-                    "color": "#555555",
-                    "margin": "md"
-                },
-                {
-                    "type": "separator",
-                    "margin": "lg"
-                },
-                {
-                    "type": "text",
-                    "text": "الكلمات المفتاحية",
-                    "weight": "bold",
-                    "size": "md",
-                    "color": "#8B4789",
-                    "margin": "lg"
-                },
-                {
-                    "type": "text",
-                    "text": " | ".join(card['keywords']),
-                    "size": "sm",
-                    "wrap": True,
-                    "color": "#9370DB",
-                    "margin": "sm"
-                }
-            ],
-            "paddingAll": "20px"
-        },
-        "footer": {
-            "type": "box",
-            "layout": "vertical",
-            "contents": [
-                {
-                    "type": "button",
-                    "style": "primary",
-                    "color": "#9370DB",
-                    "action": {
-                        "type": "postback",
-                        "label": "قراءة جديدة",
-                        "data": "action=reading_menu"
-                    }
-                },
-                {
-                    "type": "button",
-                    "style": "link",
-                    "action": {
-                        "type": "postback",
-                        "label": "القائمة الرئيسية",
-                        "data": "action=main_menu"
-                    },
-                    "margin": "sm"
-                }
-            ],
-            "paddingAll": "15px"
-        }
-    }
-
+# --------------------------------------------------
+# نتيجة قراءة عادية
+# --------------------------------------------------
 def create_spread_result(result):
-    """عرض نتيجة قراءة متعددة البطاقات"""
-    cards = result['cards']
-    
-    # إنشاء محتويات البطاقات
-    cards_contents = []
-    
-    positions = {
-        'past_present_future': ['الماضي', 'الحاضر', 'المستقبل'],
-        'relationship': ['أنت', 'الطرف الآخر', 'العلاقة'],
-        'decision': ['الخيار الأول', 'الخيار الثاني']
-    }
-    
-    position_labels = positions.get(result['type'], [f'البطاقة {i+1}' for i in range(len(cards))])
-    
-    for i, card in enumerate(cards):
-        direction = "معكوسة" if card['reversed'] else "مستقيمة"
-        
-        if i > 0:
-            cards_contents.append({
-                "type": "separator",
-                "margin": "lg"
-            })
-        
-        cards_contents.extend([
-            {
-                "type": "text",
-                "text": position_labels[i],
-                "weight": "bold",
-                "size": "md",
-                "color": "#8B4789",
-                "margin": "lg" if i > 0 else "none"
-            },
-            {
-                "type": "box",
-                "layout": "horizontal",
-                "contents": [
-                    {
-                        "type": "text",
-                        "text": card['name_ar'],
-                        "size": "sm",
-                        "weight": "bold",
-                        "flex": 0
-                    },
-                    {
-                        "type": "text",
-                        "text": f"({direction})",
-                        "size": "xs",
-                        "color": "#999999",
-                        "align": "end"
-                    }
-                ],
-                "margin": "xs"
-            },
-            {
-                "type": "text",
-                "text": " | ".join(card['keywords'][:3]),
-                "size": "xs",
-                "color": "#9370DB",
-                "margin": "xs"
-            }
-        ])
-    
-    return {
+    bubbles = []
+
+    for card in result["cards"]:
+        bubbles.append(create_card_display(card))
+
+    bubbles.append({
         "type": "bubble",
-        "size": "mega",
-        "header": {
-            "type": "box",
-            "layout": "vertical",
-            "contents": [
-                {
-                    "type": "text",
-                    "text": result['title'],
-                    "weight": "bold",
-                    "size": "xl",
-                    "align": "center",
-                    "color": "#FFFFFF"
-                },
-                {
-                    "type": "text",
-                    "text": datetime.fromisoformat(result['timestamp']).strftime("%Y-%m-%d %H:%M"),
-                    "size": "xs",
-                    "align": "center",
-                    "color": "#FFFFFF",
-                    "margin": "sm"
-                }
-            ],
-            "paddingAll": "20px",
-            "backgroundColor": "#8B4789"
-        },
+        "header": header("✨ الخلاصة"),
         "body": {
             "type": "box",
             "layout": "vertical",
-            "contents": cards_contents + [
-                {
-                    "type": "separator",
-                    "margin": "xl"
-                },
-                {
-                    "type": "text",
-                    "text": "التفسير",
-                    "weight": "bold",
-                    "size": "lg",
-                    "color": "#8B4789",
-                    "margin": "xl"
-                },
-                {
-                    "type": "text",
-                    "text": result['interpretation'],
-                    "size": "sm",
-                    "wrap": True,
-                    "color": "#555555",
-                    "margin": "md"
-                }
-            ],
-            "paddingAll": "20px"
-        },
-        "footer": {
-            "type": "box",
-            "layout": "vertical",
             "contents": [
-                {
-                    "type": "button",
-                    "style": "primary",
-                    "color": "#9370DB",
-                    "action": {
-                        "type": "postback",
-                        "label": "قراءة جديدة",
-                        "data": "action=reading_menu"
-                    }
-                },
-                {
-                    "type": "button",
-                    "style": "link",
-                    "action": {
-                        "type": "postback",
-                        "label": "القائمة الرئيسية",
-                        "data": "action=main_menu"
-                    },
-                    "margin": "sm"
-                }
-            ],
-            "paddingAll": "15px"
+                text(result["interpretation"], "sm"),
+                spacer(),
+                text(format_time(result["timestamp"]), "xs", COLORS["muted"])
+            ]
         }
+    })
+
+    return {
+        "type": "carousel",
+        "contents": bubbles
     }
 
-def create_history_view(history):
-    """عرض سجل القراءات"""
-    if not history:
-        return {
+# --------------------------------------------------
+# الصليب السلتي (10 بطاقات)
+# --------------------------------------------------
+def create_celtic_cross_result(result):
+    positions = [
+        "الوضع الحالي", "التحدي", "السبب الجذري", "الماضي",
+        "الإمكانات", "المستقبل القريب", "أنت", "الآخرون",
+        "الآمال والمخاوف", "النتيجة"
+    ]
+
+    bubbles = []
+
+    for i, card in enumerate(result["cards"]):
+        direction = "معكوسة" if card["reversed"] else "مستقيمة"
+        meaning = card["meaning_reversed"] if card["reversed"] else card["meaning_upright"]
+
+        bubbles.append({
             "type": "bubble",
+            "header": header(f"{i+1}️⃣ {positions[i]}"),
             "body": {
                 "type": "box",
                 "layout": "vertical",
                 "contents": [
-                    {
-                        "type": "text",
-                        "text": "لا يوجد سجل قراءات",
-                        "align": "center",
-                        "color": "#999999",
-                        "size": "lg"
-                    },
-                    {
-                        "type": "text",
-                        "text": "ابدأ قراءة جديدة الآن",
-                        "align": "center",
-                        "color": "#999999",
-                        "size": "sm",
-                        "margin": "md"
-                    },
-                    {
-                        "type": "button",
-                        "style": "primary",
-                        "color": "#9370DB",
-                        "action": {
-                            "type": "postback",
-                            "label": "بدء قراءة",
-                            "data": "action=reading_menu"
-                        },
-                        "margin": "lg"
-                    }
-                ],
-                "paddingAll": "40px"
+                    text(f"{card['name_ar']} ({direction})", "sm", COLORS["secondary"]),
+                    spacer(),
+                    text(meaning[:180] + "..." if len(meaning) > 180 else meaning, "sm")
+                ]
             }
-        }
-    
-    # عرض آخر 5 قراءات فقط
-    history_contents = []
-    
-    for i, reading in enumerate(history[:5]):
-        if i > 0:
-            history_contents.append({
-                "type": "separator",
-                "margin": "lg"
-            })
-        
-        timestamp = datetime.fromisoformat(reading['timestamp']).strftime("%d/%m/%Y %H:%M")
-        cards_summary = f"{len(reading['cards'])} بطاقة"
-        
-        history_contents.extend([
-            {
-                "type": "box",
-                "layout": "horizontal",
-                "contents": [
-                    {
-                        "type": "text",
-                        "text": reading['title'],
-                        "weight": "bold",
-                        "size": "sm",
-                        "flex": 0
-                    },
-                    {
-                        "type": "text",
-                        "text": timestamp,
-                        "size": "xs",
-                        "color": "#999999",
-                        "align": "end"
-                    }
-                ],
-                "margin": "lg" if i > 0 else "none"
-            },
-            {
-                "type": "text",
-                "text": cards_summary,
-                "size": "xs",
-                "color": "#9370DB",
-                "margin": "xs"
-            }
-        ])
-    
+        })
+
+    return {
+        "type": "carousel",
+        "contents": bubbles
+    }
+
+# --------------------------------------------------
+# مركز التعلم
+# --------------------------------------------------
+def create_learning_menu():
     return {
         "type": "bubble",
-        "header": {
-            "type": "box",
-            "layout": "vertical",
-            "contents": [
-                {
-                    "type": "text",
-                    "text": "سجل القراءات",
-                    "weight": "bold",
-                    "size": "xl",
-                    "align": "center",
-                    "color": "#FFFFFF"
-                },
-                {
-                    "type": "text",
-                    "text": f"آخر {len(history[:5])} قراءات",
-                    "size": "xs",
-                    "align": "center",
-                    "color": "#FFFFFF",
-                    "margin": "sm"
-                }
-            ],
-            "paddingAll": "20px",
-            "backgroundColor": "#8B4789"
-        },
+        "header": header("📚 مركز التعلم"),
         "body": {
             "type": "box",
             "layout": "vertical",
-            "contents": history_contents,
-            "paddingAll": "20px"
-        },
-        "footer": {
+            "contents": [
+                button("دليل المبتدئين", "action=beginner_guide"),
+                button("معرض البطاقات", "action=card_gallery")
+            ]
+        }
+    }
+
+def create_beginner_guide():
+    return {
+        "type": "bubble",
+        "header": header("🌱 دليل المبتدئين"),
+        "body": {
             "type": "box",
             "layout": "vertical",
             "contents": [
-                {
-                    "type": "button",
-                    "style": "primary",
-                    "color": "#9370DB",
-                    "action": {
-                        "type": "postback",
-                        "label": "قراءة جديدة",
-                        "data": "action=reading_menu"
-                    }
-                },
-                {
-                    "type": "button",
-                    "style": "link",
-                    "action": {
-                        "type": "postback",
-                        "label": "القائمة الرئيسية",
-                        "data": "action=main_menu"
-                    },
-                    "margin": "sm"
-                }
-            ],
-            "paddingAll": "15px"
+                text("التاروت أداة للتأمل الذاتي وليس للتنبؤ الحتمي.", "sm"),
+                spacer(),
+                text("كل بطاقة تحمل معنى نفسي وروحي.", "sm"),
+                spacer(),
+                text("البطاقات المعكوسة تعني طاقة داخلية أو تأخير.", "sm")
+            ]
         }
     }
+
+# --------------------------------------------------
+# الإحصائيات
+# --------------------------------------------------
+def create_stats_view(stats):
+    return {
+        "type": "bubble",
+        "header": header("📊 إحصائياتك"),
+        "body": {
+            "type": "box",
+            "layout": "vertical",
+            "contents": [
+                text(f"📖 القراءات: {stats['readings_count']}", "sm"),
+                text(f"🎴 البطاقات المشاهدة: {stats['cards_viewed']}", "sm"),
+                text(f"🔮 بطاقات اليوم: {stats['daily_cards_count']}", "sm"),
+                spacer(),
+                text(f"⭐ المستوى: {stats['level']}", "md", COLORS["secondary"])
+            ]
+        }
+    }
+
+# --------------------------------------------------
+# البحث
+# --------------------------------------------------
+def create_search_results(results, term):
+    bubbles = []
+    for card in results:
+        bubbles.append(create_card_display(card))
+    return {
+        "type": "carousel",
+        "contents": bubbles
+    }
+
+# --------------------------------------------------
+# أدوات مساعدة
+# --------------------------------------------------
+def header(text_value):
+    return {
+        "type": "box",
+        "layout": "vertical",
+        "contents": [
+            {
+                "type": "text",
+                "text": text_value,
+                "size": "lg",
+                "weight": "bold",
+                "align": "center",
+                "color": "#FFFFFF"
+            }
+        ],
+        "paddingAll": "15px",
+        "backgroundColor": COLORS["primary"]
+    }
+
+def button(label, data):
+    return {
+        "type": "button",
+        "style": "primary",
+        "color": COLORS["primary"],
+        "action": {
+            "type": "postback",
+            "label": label,
+            "data": data
+        }
+    }
+
+def text(value, size="sm", color=COLORS["text"]):
+    return {
+        "type": "text",
+        "text": value,
+        "size": size,
+        "color": color,
+        "wrap": True
+    }
+
+def spacer():
+    return {
+        "type": "spacer",
+        "size": "md"
+    }
+
+def format_time(ts):
+    return datetime.fromisoformat(ts).strftime("%Y-%m-%d %H:%M")
